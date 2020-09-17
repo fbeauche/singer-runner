@@ -1,6 +1,7 @@
 import os
 import sys
 import json
+import subprocess
 from datetime import datetime
 from subprocess import Popen, PIPE
 
@@ -58,14 +59,24 @@ class SingerProcess:
 
         process_logger.info(command)
 
-        self.__process_handle = Popen(
-            command,
-            stdin=PIPE if singer_process_type == TARGET else None,
-            stdout=PIPE,
-            stderr=PIPE,
-            preexec_fn=os.setsid,
-            bufsize=1,
-            close_fds=ON_POSIX)
+        if ON_POSIX: 
+            self.__process_handle = Popen(
+                command,
+                stdin=PIPE if singer_process_type == TARGET else None,
+                stdout=PIPE,
+                stderr=PIPE,
+                preexec_fn=os.setsid,
+                bufsize=1,
+                close_fds=ON_POSIX)
+        else:
+            self.__process_handle = Popen(
+                command,
+                stdin=PIPE if singer_process_type == TARGET else None,
+                stdout=PIPE,
+                stderr=PIPE,
+                creationflags=subprocess.CREATE_NEW_PROCESS_GROUP,
+                bufsize=1,
+                close_fds=ON_POSIX)
 
         self.logging_thread = run_thread(log_helper,
                                          (self.__process_handle.stderr,
